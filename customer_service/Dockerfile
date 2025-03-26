@@ -15,10 +15,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# COPY entrypoint.sh /app/entrypoint.sh
-# Cấp quyền thực thi cho entrypoint.sh
-# RUN chmod +x entrypoint.sh
-
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8006"]

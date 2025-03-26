@@ -33,6 +33,7 @@ services:
       # - SHIPPING_SERVICE_URL=http://shipping_service:8003
       # - PAYMENT_SERVICE_URL=http://payment_service:8004
       # - PRODUCT_SERVICE_URL=http://product_service:8005
+      - CUSTOMER_SERVICE_URL=http://product_service:8006
     depends_on:
       - user_service
     networks:
@@ -63,6 +64,35 @@ services:
             python manage.py makemigrations &&
             python manage.py migrate &&
             python manage.py runserver 0.0.0.0:8000"
+
+  # Customer Service
+  customer_service:
+    build:
+      context: ./customer_service
+    container_name: ecommerce_customer
+    restart: always
+    ports:
+      - "8006:8006"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=your_secret_key_here
+      - DB_NAME=ecommerce_customer
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - USER_SERVICE_URL=http://user_service:8000
+      - ORDER_SERVICE_URL=http://order_service:8002
+    depends_on:
+      - mysql
+      - user_service
+    networks:
+      - ecommerce_network
+    command: >
+        bash -c "sleep 15 &&
+            python manage.py makemigrations &&
+            python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8006"
 
   # # Cart Service
   # cart_service:

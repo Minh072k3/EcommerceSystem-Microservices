@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách khách hàng</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Danh sách khách hàng</h1>
+        <div class="mb-3">
+            <a href="{% url 'customer-create' %}" class="btn btn-primary">Thêm khách hàng mới</a>
+        </div>
+        
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Email</th>
+                    <th>Họ</th>
+                    <th>Tên</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>{{ customer.id }}</td>
+                    <td>{{ customer.username }}</td>
+                    <td>{{ customer.email }}</td>
+                    <td>{{ customer.last_name }}</td>
+                    <td>{{ customer.first_name }}</td>
+                    <td>{% if customer.is_active %}Hoạt động{% else %}Ngừng hoạt động{% endif %}</td>
+                    <td>
+                        <a href="{% url 'customer-detail' customer.id %}" class="btn btn-info btn-sm">Xem</a>
+                        <a href="{% url 'customer-edit' customer.id %}" class="btn btn-warning btn-sm">Sửa</a>
+                        <form action="{% url 'customer-delete' customer.id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa khách hàng này?')">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">Không có khách hàng nào.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

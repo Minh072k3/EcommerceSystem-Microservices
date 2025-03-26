@@ -1,0 +1,207 @@
+version: '3.8'
+
+services:
+  # Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: ecommerce_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ecommerce
+    ports:
+      - "3307:3306"  # Đổi port mapping để tránh xung đột với MySQL cục bộ
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d  # Thêm script khởi tạo
+    networks:
+      - ecommerce_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # API Gateway
+  api_gateway:
+    build:
+      context: ./api_gateway
+    container_name: ecommerce_api_gateway
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - USER_SERVICE_URL=http://user_service:8000
+      # - CART_SERVICE_URL=http://cart_service:8001
+      # - ORDER_SERVICE_URL=http://order_service:8002
+      # - SHIPPING_SERVICE_URL=http://shipping_service:8003
+      # - PAYMENT_SERVICE_URL=http://payment_service:8004
+      # - PRODUCT_SERVICE_URL=http://product_service:8005
+    depends_on:
+      - user_service
+    networks:
+      - ecommerce_network
+
+  # User Service
+  user_service:
+    build:
+      context: ./user_service
+    container_name: ecommerce_user_service
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=your_secret_key_here
+      - DB_NAME=ecommerce_user
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_HOST=mysql
+      - DB_PORT=3306
+    depends_on:
+      - mysql
+    networks:
+      - ecommerce_network
+    command: >
+        bash -c "sleep 15 &&
+            python manage.py makemigrations &&
+            python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
+
+  # # Cart Service
+  # cart_service:
+  #   build:
+  #     context: ./cart_service
+  #   container_name: ecommerce_cart_service
+  #   restart: always
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     - DEBUG=True
+  #     - SECRET_KEY=your_secret_key_here
+  #     - DB_NAME=ecommerce_cart
+  #     - DB_USER=root
+  #     - DB_PASSWORD=root
+  #     - DB_HOST=mysql
+  #     - DB_PORT=3306
+  #     - USER_SERVICE_URL=http://user_service:8000
+  #   depends_on:
+  #     - mysql
+  #     - user_service
+  #   networks:
+  #     - ecommerce_network
+  #   command: >
+  #     bash -c "python manage.py wait_for_db &&
+  #              python manage.py migrate &&
+  #              python manage.py runserver 0.0.0.0:8001"
+
+  # # Order Service
+  # order_service:
+  #   build:
+  #     context: ./order_service
+  #   container_name: ecommerce_order_service
+  #   restart: always
+  #   ports:
+  #     - "8002:8002"
+  #   environment:
+  #     - DEBUG=True
+  #     - SECRET_KEY=your_secret_key_here
+  #     - DB_NAME=ecommerce_order
+  #     - DB_USER=root
+  #     - DB_PASSWORD=root
+  #     - DB_HOST=mysql
+  #     - DB_PORT=3306
+  #     - USER_SERVICE_URL=http://user_service:8000
+  #     - CART_SERVICE_URL=http://cart_service:8001
+  #   depends_on:
+  #     - mysql
+  #     - user_service
+  #     - cart_service
+  #   networks:
+  #     - ecommerce_network
+  #   command: >
+  #     bash -c "python manage.py wait_for_db &&
+  #              python manage.py migrate &&
+  #              python manage.py runserver 0.0.0.0:8002"
+
+  # # Shipping Service
+  # shipping_service:
+  #   build:
+  #     context: ./shipping_service
+  #   container_name: ecommerce_shipping_service
+  #   restart: always
+  #   ports:
+  #     - "8003:8003"
+  #   environment:
+  #     - DEBUG=True
+  #     - SECRET_KEY=your_secret_key_here
+  #     - DB_NAME=ecommerce_shipping
+  #     - DB_USER=root
+  #     - DB_PASSWORD=root
+  #     - DB_HOST=mysql
+  #     - DB_PORT=3306
+  #     - ORDER_SERVICE_URL=http://order_service:8002
+  #   depends_on:
+  #     - mysql
+  #     - order_service
+  #   networks:
+  #     - ecommerce_network
+  #   command: >
+  #     bash -c "python manage.py wait_for_db &&
+  #              python manage.py migrate &&
+  #              python manage.py runserver 0.0.0.0:8003"
+
+  # # Payment Service
+  # payment_service:
+  #   build:
+  #     context: ./payment_service
+  #   container_name: ecommerce_payment_service
+  #   restart: always
+  #   ports:
+  #     - "8004:8004"
+  #   environment:
+  #     - DEBUG=True
+  #     - SECRET_KEY=your_secret_key_here
+  #     - DB_NAME=ecommerce_payment
+  #     - DB_USER=root
+  #     - DB_PASSWORD=root
+  #     - DB_HOST=mysql
+  #     - DB_PORT=3306
+  #     - ORDER_SERVICE_URL=http://order_service:8002
+  #   depends_on:
+  #     - mysql
+  #     - order_service
+  #   networks:
+  #     - ecommerce_network
+  #   command: >
+  #     bash -c "python manage.py wait_for_db &&
+  #              python manage.py migrate &&
+  #              python manage.py runserver 0.0.0.0:8004"
+
+  # # Product Service
+  # product_service:
+  #   build:
+  #     context: ./product_service
+  #   container_name: ecommerce_product_service
+  #   restart: always
+  #   ports:
+  #     - "8005:8005"
+  #   environment:
+  #     - DEBUG=True
+  #     - SECRET_KEY=your_secret_key_here
+  #     - DB_NAME=ecommerce_product
+  #     - DB_USER=root
+  #     - DB_PASSWORD=root
+  #     - DB_HOST=mysql
+  #     - DB_PORT=3306
+  #   depends_on:
+  #     - mysql
+  #   networks:
+  #     - ecommerce_network
+  #   command: >
+  #     bash -c "python manage.py wait_for_db &&
+  #              python manage.py migrate &&
+  #              python manage.py runserver 0.0.0.0:8005"
+
+networks:
+  ecommerce_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
